@@ -14,6 +14,7 @@ from core.subflowgenvideo.download_video import download_video
 from core.constants.project_constants import GEMENI_KEY, SCENES_PER_BATCH
 import random
 import os
+import json
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 
@@ -33,31 +34,72 @@ def run_full_flow(model_key, log, num_scenes=4):
     seed = random.randint(1, 1000000000)
     log.insert("end", f"🎲 Seed: {seed}\n\n")
     
-    # Step 1: Get config from Google Sheet
+    # Step 1: Load config từ auto_tokens.json
     log.insert("end", "=" * 60 + "\n")
-    log.insert("end", "STEP 1: GET CONFIG\n")
+    log.insert("end", "STEP 1: LOAD TOKEN CONFIG\n")
     log.insert("end", "=" * 60 + "\n")
-    token_data = get_token_from_sheet(log)
     
-    # Step 2: Parse email
+    # Kiểm tra file auto_tokens.json
+    if not os.path.exists("auto_tokens.json"):
+        log.insert("end", "❌ Không tìm thấy auto_tokens.json!\n")
+        log.insert("end", "💡 Hãy bấm nút '🔑 LẤY TOKEN' để lấy token từ Chrome\n")
+        return "ERROR: Không có file auto_tokens.json"
+    
+    # Đọc token từ file
+    with open("auto_tokens.json", 'r') as f:
+        auto_token_data = json.load(f)
+    
+    log.insert("end", f"✅ Đã load token từ auto_tokens.json\n")
+    
+    # Lấy cookie string và access token
+    cookie_string = auto_token_data.get('cookieString', '')
+    session_token = auto_token_data.get('sessionToken', '')
+    
+    if not cookie_string or not session_token:
+        log.insert("end", "❌ Cookie hoặc session token trống!\n")
+        return "ERROR: Token không hợp lệ"
+    
+    log.insert("end", f"✅ Cookie: {len(cookie_string)} chars\n")
+    log.insert("end", f"✅ Session Token: {session_token[:50]}...\n")
+    
+    # Step 2: Parse email từ cookies
     log.insert("end", "\n" + "=" * 60 + "\n")
     log.insert("end", "STEP 2: PARSE EMAIL\n")
     log.insert("end", "=" * 60 + "\n")
-    raw_email = token_data['email']
-    email_parse_data = email_parse(raw_email)
-    log.insert("end", f"✅ Email: {email_parse_data['emailDefault']}\n")
     
-    # Step 3: Build token setup
+    # Lấy email từ allCookies
+    all_cookies = auto_token_data.get('allCookies', {})
+    raw_email = all_cookies.get('EMAIL', all_cookies.get('email', ''))
+    
+    if raw_email:
+        email_parse_data = email_parse(raw_email)
+        log.insert("end", f"✅ Email: {email_parse_data['emailDefault']}\n")
+    else:
+        log.insert("end", "⚠️ Không tìm thấy email trong cookies - dùng default\n")
+        email_parse_data = {"emailDefault": "user@gmail.com"}
+    
+    # Step 3: Build token setup (dùng cookie string)
     log.insert("end", "\n" + "=" * 60 + "\n")
     log.insert("end", "STEP 3: BUILD TOKEN SETUP\n")
     log.insert("end", "=" * 60 + "\n")
-    token_setup_data = build_token_setup(token_data, email_parse_data)
+    
+    token_setup_data = {
+        'cookie': cookie_string,
+        'sessionToken': session_token
+    }
     log.insert("end", "✅ Token setup complete\n")
     
-    # Step 4: Get access token
+    # Step 4: Get access token (sử dụng session token)
     log.insert("end", "\n" + "=" * 60 + "\n")
     log.insert("end", "STEP 4: GET ACCESS TOKEN\n")
     log.insert("end", "=" * 60 + "\n")
+    
+    # Build token_data format cũ để tương thích với get_access_token
+    token_data = {
+        'sessionToken': session_token,
+        'csrfToken': auto_token_data.get('csrfToken', '')
+    }
+    
     access_token = get_access_token(token_data, email_parse_data, log)
     if not access_token:
         return "ERROR: Không có access token"
@@ -66,7 +108,7 @@ def run_full_flow(model_key, log, num_scenes=4):
     log.insert("end", "\n" + "=" * 60 + "\n")
     log.insert("end", "STEP 5: CREATE PROJECT\n")
     log.insert("end", "=" * 60 + "\n")
-    project_id = create_project(token_setup_data['cookie'], log)
+    project_id = create_project(cookie_string, log)
     if not project_id:
         return "ERROR: Không tạo được project"
     

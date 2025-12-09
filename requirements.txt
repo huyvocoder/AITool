@@ -5,3 +5,7 @@ requests>=2.31.0
 gspread>=5.8.0
 google-auth>=2.20.0
 google-generativeai>=0.3.0
+
+# Chrome cookie extraction
+pywin32>=311
+pycryptodome>=3.23.0
