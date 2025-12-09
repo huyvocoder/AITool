@@ -1,0 +1,7 @@
+# Project Python dependencies
+# Edit versions as needed. Install with: python -m pip install -r requirements.txt
+
+requests>=2.31.0
+gspread>=5.8.0
+google-auth>=2.20.0
+google-generativeai>=0.3.0

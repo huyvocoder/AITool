@@ -103,7 +103,8 @@ def run_full_flow(model_key, log, num_scenes=4):
     log.insert("end", f"STEP 7: GENERATE {len(scenes)} VIDEOS (batch size: {SCENES_PER_BATCH})\n")
     log.insert("end", "=" * 60 + "\n")
     
-    media_generation_ids = []
+    # Collect generated media as list of objects: {"scene_num": int, "media_id": str}
+    media_generation_results = []
     total_scenes = len(scenes)
     
     # Chia scenes thành các batch
@@ -115,7 +116,8 @@ def run_full_flow(model_key, log, num_scenes=4):
         log.insert("end", f"\n🔄 BATCH {batch_num}: Gen {len(batch_scenes)} scenes SONG SONG (#{batch_start+1} -> #{batch_end})...\n")
         
         # Gen SONG SONG tất cả scenes trong batch này
-        batch_media_ids = []
+        # For this batch, collect objects with scene number + media id
+        batch_media_items = []
         
         def process_scene(idx, scene):
             """Helper function để process 1 scene."""
@@ -140,7 +142,7 @@ def run_full_flow(model_key, log, num_scenes=4):
                 try:
                     result_scene_num, media_id = future.result()
                     if media_id:
-                        batch_media_ids.append(media_id)
+                        batch_media_items.append({"scene_num": result_scene_num, "media_id": media_id})
                         log.insert("end", f"  ✅ Scene {result_scene_num} hoàn thành!\n")
                     else:
                         log.insert("end", f"  ⚠️ Scene {result_scene_num} thất bại - Skip!\n")
@@ -148,23 +150,26 @@ def run_full_flow(model_key, log, num_scenes=4):
                     log.insert("end", f"  ❌ Scene {scene_num} lỗi: {str(e)}\n")
         
         # Chỉ chuyển batch tiếp theo nếu có ít nhất 1 scene thành công
-        if batch_media_ids:
-            media_generation_ids.extend(batch_media_ids)
-            log.insert("end", f"\n✅ BATCH {batch_num} hoàn tất: {len(batch_media_ids)}/{len(batch_scenes)} scenes\n")
+        if batch_media_items:
+            media_generation_results.extend(batch_media_items)
+            log.insert("end", f"\n✅ BATCH {batch_num} hoàn tất: {len(batch_media_items)}/{len(batch_scenes)} scenes\n")
         else:
             log.insert("end", f"\n❌ BATCH {batch_num} thất bại hoàn toàn - Tiếp tục batch tiếp theo...\n")
     
-    if not media_generation_ids:
+    if not media_generation_results:
         return "ERROR: Không tạo được video nào"
-    
-    log.insert("end", f"\n🎉 TỔNG KẾT: Tạo thành công {len(media_generation_ids)}/{total_scenes} videos\n")
+
+    log.insert("end", f"\n🎉 TỔNG KẾT: Tạo thành công {len(media_generation_results)}/{total_scenes} videos\n")
     
     # Step 9: Merge videos
     log.insert("end", "\n" + "=" * 60 + "\n")
     log.insert("end", "STEP 8: MERGE VIDEOS\n")
     log.insert("end", "=" * 60 + "\n")
     
-    merge_json = merge_video_json(media_generation_ids)
+    # merge_video_json expects a list of media ids; sort results by scene_num
+    sorted_results = sorted(media_generation_results, key=lambda x: x.get('scene_num', 0))
+    media_ids_for_merge = [item['media_id'] for item in sorted_results]
+    merge_json = merge_video_json(media_ids_for_merge)
     operation_name = create_video(token_setup_data['cookie'], merge_json, log)
     
     if not operation_name:

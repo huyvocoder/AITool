@@ -44,7 +44,7 @@ VIDEO_ASPECT_RATIO = "VIDEO_ASPECT_RATIO_LANDSCAPE"
 API_TIMEOUT = 30  # seconds
 POLL_INTERVAL = 10  # seconds
 MAX_RETRIES = 120  # Số lần retry tối đa khi check status
-SCENES_PER_BATCH = 2  # Số scenes gen cùng lúc trong mỗi batch
+SCENES_PER_BATCH = 4  # Số scenes gen cùng lúc trong mỗi batch
 
 # ========== STATUS CODES ==========
 STATUS_SUCCESSFUL = "MEDIA_GENERATION_STATUS_SUCCESSFUL"
