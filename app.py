@@ -202,11 +202,11 @@ def extract_token_from_chrome():
                         conn = sqlite3.connect(temp_db)
                         cursor = conn.cursor()
                         
-                        # Query: lấy cả encrypted_value
+                        # Query: lấy cả encrypted_value - dùng LIKE để bắt tất cả biến thể
                         cursor.execute("""
                             SELECT name, value, encrypted_value, host_key
                             FROM cookies
-                            WHERE host_key IN ('labs.google', '.labs.google')
+                            WHERE host_key LIKE '%labs.google%'
                         """)
                         
                         rows = cursor.fetchall()
