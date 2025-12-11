@@ -10,7 +10,6 @@ import base64
 
 from core.mainflowgenVideo.main_flow import run_full_flow
 from core.constants.project_constants import MODEL_VIDEO_KEYS, SCENES_PER_BATCH
-from core.utils.cookie_extractor import extract_token_from_chrome
 
 # Global variables
 current_video_data = None  # Store encoded video và metadata
@@ -228,20 +227,6 @@ tk.Label(
     font=("Arial", 9)
 ).pack(side=tk.LEFT, padx=5)
 
-# Auto Token Button (NEW!)
-auto_token_btn = tk.Button(
-    top_frame,
-    text="🔑 LẤY TOKEN",
-    command=lambda: extract_token_from_chrome(root, status_label),
-    bg="#ff6b00",
-    fg="white",
-    font=("Arial", 11, "bold"),
-    width=12,
-    height=2,
-    relief=tk.RAISED,
-    cursor="hand2"
-)
-auto_token_btn.pack(side=tk.LEFT, padx=10, pady=10)
 
 # Gen Video Button
 start_btn = tk.Button(
@@ -258,27 +243,12 @@ start_btn = tk.Button(
 )
 start_btn.pack(side=tk.LEFT, padx=20, pady=10)
 
-# Token Status Indicator
-def check_token_status():
-    """Kiểm tra xem có token chưa."""
-    if os.path.exists("auto_tokens.json"):
-        try:
-            with open("auto_tokens.json", 'r') as f:
-                data = json.load(f)
-            if data.get("sessionToken"):
-                return True, "✅ Token OK"
-        except:
-            pass
-    return False, "⚠️ Chưa có token"
-
-has_token, token_status = check_token_status()
-
 # Status Label
 status_label = tk.Label(
     top_frame,
-    text=token_status,
+    text="Sẵn sàng để tạo video 🎥",
     bg="#2d2d2d",
-    fg="#00ff00" if has_token else "#ffaa00",
+    fg="#00ff00",
     font=("Arial", 11, "bold")
 )
 status_label.pack(side=tk.LEFT, padx=20)
