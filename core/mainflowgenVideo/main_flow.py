@@ -52,7 +52,7 @@ def run_full_flow(model_key, log, num_scenes=4):
     log.insert("end", "\n" + "=" * 60 + "\n")
     log.insert("end", "STEP 4: GET ACCESS TOKEN\n")
     log.insert("end", "=" * 60 + "\n")
-    access_token = get_access_token(token_data, email_parse_data, log)
+    access_token = "ya29.a0Aa7pCA-fYdYGTWdATVxpndcurJoEh0aE9QjAG-k8Il4DFkqFiIjgubWkRc_tvhLkTLLGOJ8zCzrB6Klmwl3vLVk-CMQhgvWC8wkh4KXMB4ITvSnOcDu1DDtbAXYZOLC9GosrBgdYVldGzAruAe_iOejGuRosJ21Gk6WJnBZfQIazCFJvJnqJLCu5cAin9wH3LL4nwI82v1eAt4AMiRUSeUKoWXZITM7ull5hs8N7qll_-_9ZgpzNH1HriV2QvplGvruaMpF4NJPzdwiXvjnfWqUcF8em3lzWxnazsWalsYY4Oyf4ZsAlXPKt5LduZhWcaOQ1Yfb-cj-kRemBxuS5645hs-qaiHS5aoYEOMyXP8voaCgYKAT4SARISFQHGX2MiXq3ojLfJbVKktQvudILcyw0371"
     if not access_token:
         return "ERROR: Không có access token"
     

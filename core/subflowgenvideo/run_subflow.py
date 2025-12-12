@@ -23,7 +23,12 @@ def run_gen_video_subflow(project_id, access_token, seed, scene, model_key, log)
     log.insert("end", f"\n🎬 Scene {scene_num}:\n")
     
     # Step 1: Create image
-    media_id = create_image(project_id, access_token, seed, nanoprompt, log)
+    create_result = create_image(project_id, access_token, seed, nanoprompt, log)
+    # normalize to media_id string when create_image returns dict or string
+    if isinstance(create_result, dict):
+        media_id = create_result.get('media_id') or create_result.get('mediaId')
+    else:
+        media_id = create_result
     if not media_id:
         return None
     
